@@ -68,11 +68,11 @@ class RAGEngine:
 
     def build_vectorstore(self) -> None:
         if not self.docs:
-            raise ValueError("Pehle document load karo (PDF, Wiki ya URL)!")
+            raise ValueError("Please load a document first (PDF, Wiki, or URL)!")
             
-        print(f"Total {len(self.docs)} chunks embedding ke liye tayaar hain. Vector store ban raha hai...")
+        print(f"Total {len(self.docs)} chunks ready for embedding. Building vector store...")
         
-        # OOM/Memory errors se bachne ke liye chotey batches mein data daalenge
+        # Add data in small batches to avoid OOM/Memory errors
         batch_size = 50
         for i in range(0, len(self.docs), batch_size):
             batch = self.docs[i:i + batch_size]
@@ -86,26 +86,26 @@ class RAGEngine:
 
     def build_chain(self, top_k: int = 3) -> None:
         if not self.vectorstore:
-            raise ValueError("Pehle build_vectorstore() call karo!")
+            raise ValueError("Call build_vectorstore() first!")
 
         self.retriever = self.vectorstore.as_retriever(
             search_type="similarity",
             search_kwargs={"k": top_k},
         )
 
-        prompt = ChatPromptTemplate.from_template("""Tum ek helpful AI assistant ho jo PDF documents aur scraped web/Wikipedia sources se sawaalon ka jawab deta hai.
+        prompt = ChatPromptTemplate.from_template("""You are a helpful AI assistant that answers questions from PDF documents and scraped web/Wikipedia sources.
 
-Context mein PDF aur web sources dono shaamil ho saktay hain. Dono sources ke data ko apas mein cross-reference karke ek mukammal aur saheeh jawab do.
-Agar alag alag sources aapas mein agree karte hain ya ek dosre ki wazahat karte hain, toh use mension karo.
-Agar jawab context mein nahi hai, toh clearly bolo "Is document mein yeh information nahi hai."
-Jawab clear aur concise rakho. Agar Urdu/Roman Urdu mein poocha jaye toh usi mein jawab do.
+The context may include both PDF and web sources. Cross-reference data from different sources to provide a complete and accurate answer.
+If different sources agree with each other or explain each other, mention it.
+If the answer is not in the context, clearly state "This information is not in the document."
+Keep the answer clear and concise.
 
 Context:
 {context}
 
-Sawaal: {question}
+Question: {question}
 
-Jawab:""")
+Answer:""")
 
         def format_docs(docs):
             return "\n\n".join(d.page_content for d in docs)
@@ -120,7 +120,7 @@ Jawab:""")
 
     def query(self, question: str) -> Dict:
         if not self.chain:
-            raise ValueError("Pehle build_chain() call karo!")
+            raise ValueError("Call build_chain() first!")
 
         answer = self.chain.invoke(question)
 

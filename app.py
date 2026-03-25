@@ -32,7 +32,7 @@ with st.sidebar:
         value=env_key,
         type="password",
         placeholder="gsk_...",
-        help="groq.com par free account banao"
+        help="Create a free account on groq.com"
     )
     if env_key:
         st.success("✅ API Key loaded from .env")
@@ -41,7 +41,7 @@ with st.sidebar:
     st.markdown("### 📄 PDF Upload")
     
     uploaded_files = st.file_uploader(
-        "PDF files upload karo",
+        "Upload PDF files",
         type=["pdf"],
         accept_multiple_files=True
     )
@@ -53,23 +53,23 @@ with st.sidebar:
     
     st.markdown("---")
     chunk_size = st.slider("Chunk size", 200, 1000, 500, 100,
-                           help="Bada = zyada context, chhota = zyada precise")
+                           help="Larger = more context, smaller = more precise")
     top_k = st.slider("Top K results", 1, 8, 3,
-                      help="Kitne chunks se answer banana hai")
+                      help="Number of chunks to build the answer")
     
-    process_btn = st.button("🚀 PDFs Process Karo", use_container_width=True)
+    process_btn = st.button("🚀 Process PDFs", use_container_width=True)
     
     st.markdown("---")
-    if st.button("🗑️ Chat Clear Karo", use_container_width=True):
+    if st.button("🗑️ Clear Chat", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
     
     st.markdown("---")
-    st.markdown("**Kaise use karein:**")
-    st.markdown("1. Groq API key daalo")
-    st.markdown("2. PDF upload karo, Wiki topic ya URL daalo")
-    st.markdown("3. 'Process' dabao")
-    st.markdown("4. Question poocho!")
+    st.markdown("**How to use:**")
+    st.markdown("1. Enter Groq API key")
+    st.markdown("2. Upload PDF, enter Wiki topic or URL")
+    st.markdown("3. Click 'Process'")
+    st.markdown("4. Ask questions!")
 
 # ── Session State ─────────────────────────────────────────
 if "messages" not in st.session_state:
@@ -81,16 +81,16 @@ if "pdf_processed" not in st.session_state:
 
 # ── Main Area ─────────────────────────────────────────────
 st.markdown('<div class="main-title">📚 PDF RAG System</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">Apne PDFs se intelligent Q&A — powered by LangChain + Groq</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">Intelligent Q&A from your PDFs — powered by LangChain + Groq</div>', unsafe_allow_html=True)
 
 # Process PDFs
 if process_btn:
     if not groq_key:
-        st.error("❌ Pehle Groq API key daalo!")
+        st.error("❌ Enter Groq API key first!")
     elif not uploaded_files and not wiki_topic and not web_url:
-        st.error("❌ Koi PDF, Wiki topic ya URL dein!")
+        st.error("❌ Please provide a PDF, Wiki topic, or URL!")
     else:
-        with st.spinner("PDFs process ho rahi hain... ⏳"):
+        with st.spinner("Processing PDFs... ⏳"):
             try:
                 # Save uploaded PDFs temporarily
                 tmp_paths = []
@@ -112,7 +112,7 @@ if process_btn:
                     rag.load_url(web_url)
                 
                 if not rag.docs:
-                     raise ValueError("Koi valid data extract nahi ho saka!")
+                     raise ValueError("Could not extract any valid data!")
 
                 rag.build_vectorstore()
                 rag.build_chain(top_k=top_k)
@@ -121,7 +121,7 @@ if process_btn:
                 st.session_state.pdf_processed = True
                 st.session_state.messages = []
                 
-                st.success("✅ Data source(s) processed! Ab sawaal poocho.")
+                st.success("✅ Data source(s) processed! You can ask questions now.")
             except Exception as e:
                 st.error(f"❌ Error: {str(e)}")
 
@@ -136,17 +136,17 @@ if st.session_state.pdf_processed and st.session_state.rag:
         else:
             st.markdown(f'<div class="chat-bot">🤖 {msg["content"]}</div>', unsafe_allow_html=True)
             if msg.get("sources"):
-                with st.expander("📄 Sources dekho"):
+                with st.expander("📄 View Sources"):
                     for i, src in enumerate(msg["sources"], 1):
                         st.markdown(f'<div class="source-box">**Source {i}:** {src}</div>', unsafe_allow_html=True)
     
     # Input
-    user_input = st.chat_input("Document ya data ke baare mein kuch poocho...")
+    user_input = st.chat_input("Ask something about the document or data...")
     
     if user_input:
         st.session_state.messages.append({"role": "user", "content": user_input})
         
-        with st.spinner("Sooch raha hoon... 🤔"):
+        with st.spinner("Thinking... 🤔"):
             try:
                 result = st.session_state.rag.query(user_input)
                 answer = result["answer"]
@@ -160,19 +160,19 @@ if st.session_state.pdf_processed and st.session_state.rag:
             except Exception as e:
                 st.session_state.messages.append({
                     "role": "assistant",
-                    "content": f"❌ Error aaya: {str(e)}"
+                    "content": f"❌ Error occurred: {str(e)}"
                 })
         
         st.rerun()
 
 elif not st.session_state.pdf_processed:
-    st.info("👈 Left sidebar se PDF upload karo aur process button dabao!")
+    st.info("👈 Upload PDF from the left sidebar and click process!")
     
     # Demo cards
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.markdown("### 📖 Kya kar sakta hai?")
-        st.markdown("- PDF, Wiki, aur Web se jawab\n- Dono data ko cross-reference karna\n- Sources ke saath answer")
+        st.markdown("### 📖 What can it do?")
+        st.markdown("- Answers from PDF, Wiki, and Web\n- Cross-reference multiple sources\n- Answers with sources")
     with col2:
         st.markdown("### ⚡ Technology")
         st.markdown("- LangChain RAG\n- Groq LLM (free)\n- FAISS Vector Store")
