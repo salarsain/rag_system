@@ -99,6 +99,7 @@ The context may include both PDF and web sources. Cross-reference data from diff
 If different sources agree with each other or explain each other, mention it.
 If the answer is not in the context, clearly state "This information is not in the document."
 Keep the answer clear and concise.
+CRITICAL INSTRUCTION: You MUST always answer in English, regardless of the language of the source documents or the user's question.
 
 Context:
 {context}
